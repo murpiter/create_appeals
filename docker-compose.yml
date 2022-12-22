@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  rabbit:
+    hostname: "appeals_rabbit"
+    image: rabbitmq:3
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  db:
+    hostname: "appeals_db"
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+    ports:
+      - "5434:5432"
+
+  frontend:
+      image: nginx
+      ports:
+          - "8005:80"
+      volumes:
+          - ./frontend:/usr/share/nginx/html
+
+  backend:
+    build:
+      dockerfile: backend/Dockerfile
+    volumes:
+      - ./backend:/usr/app/backend/src
+    ports:
+      - "8888:8888"
+    depends_on:
+      - rabbit
+    network_mode: "host"
+
+  servicedb:
+    build:
+      dockerfile: servicedb/Dockerfile
+    volumes:
+      - ./servicedb:/usr/app/servicedb/src
+    depends_on:
+      - rabbit
+      - db
+      - backend
+    network_mode: "host"
